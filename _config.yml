@@ -2,6 +2,15 @@ author:
   name: sgd
   url: https://github.com/sgdxbc
 
+defaults:
+  -
+    scope:
+      path: ""
+    values:
+      layout: post
+      title: ""
+      excerpt_separator: <!-- more -->
+
 remote_theme: chesterhow/tale
 
 permalink:    /:year-:month-:day/:title
