@@ -11,7 +11,7 @@ defaults:
       title: ""
       excerpt_separator: <!-- more -->
 
-remote_theme: chesterhow/tale
+remote_theme: sgdxbc/tale
 
 permalink:    /:year-:month-:day/:title
 paginate:     5
