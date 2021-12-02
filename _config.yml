@@ -1,4 +1,6 @@
-author: sgd
+author:
+  name: sgd
+  url: https://github.com/sgdxbc
 
 remote_theme: chesterhow/tale
 
