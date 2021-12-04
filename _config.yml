@@ -14,7 +14,7 @@ defaults:
 remote_theme: sgdxbc/tale
 
 permalink:    /:year-:month-:day/:title
-paginate:     5
+paginate:     20
 
 plugins:
   - jekyll-paginate
