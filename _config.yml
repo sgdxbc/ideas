@@ -11,6 +11,7 @@ defaults:
       title: ""
       excerpt_separator: <!-- more -->
 
+baseurl: "/ideas"
 include:
   - _pages
 
