@@ -11,6 +11,9 @@ defaults:
       title: ""
       excerpt_separator: <!-- more -->
 
+include:
+  - _pages
+
 remote_theme: sgdxbc/tale
 
 permalink:    /:year-:month-:day/:title
