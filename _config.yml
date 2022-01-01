@@ -2,6 +2,8 @@ author:
   name: sgd
   url: https://github.com/sgdxbc
 
+show_drafts: true
+
 defaults:
   -
     scope:
