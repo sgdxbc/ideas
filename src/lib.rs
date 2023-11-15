@@ -91,7 +91,7 @@ pub struct Site {
 #[derive(Debug)]
 pub struct Post {
     pub path: Vec<String>,
-    date: DateTime<FixedOffset>,
+    pub date: DateTime<FixedOffset>,
     title: Option<String>,
     body: String, // compiled
 }
@@ -154,13 +154,13 @@ impl Post {
                 }
                 // TODO post title
                 .pagination {
-                    @if let Some(next_post) = next_post {
-                        a href={ (site.base_url) "/" (next_post.path.join("/")) } .left .arrow {
+                    @if let Some(prev_post) = prev_post {
+                        a href={ (site.base_url) "/" (prev_post.path.join("/")) } .left .arrow {
                             (PreEscaped("&#8592;"))
                         }
                     }
-                    @if let Some(prev_post) = prev_post {
-                        a href={ (site.base_url) "/" (prev_post.path.join("/")) } .right .arrow {
+                    @if let Some(next_post) = next_post {
+                        a href={ (site.base_url) "/" (next_post.path.join("/")) } .right .arrow {
                             (PreEscaped("&#8594;"))
                         }
                     }
@@ -203,13 +203,13 @@ impl Catalogue<'_> {
                     }
                 }
                 .pagination {
-                    @if let Some(next) = next {
-                        a href={ (site.base_url) "/" (next.path.join("/")) } .left .arrow {
+                    @if let Some(prev) = prev {
+                        a href={ (site.base_url) "/" (prev.path.join("/")) } .left .arrow {
                             (PreEscaped("&#8592;"))
                         }
                     }
-                    @if let Some(prev) = prev {
-                        a href={ (site.base_url) "/" (prev.path.join("/")) } .right .arrow {
+                    @if let Some(next) = next {
+                        a href={ (site.base_url) "/" (next.path.join("/")) } .right .arrow {
                             (PreEscaped("&#8594;"))
                         }
                     }
@@ -218,6 +218,28 @@ impl Catalogue<'_> {
         )
         .into()
     }
+}
+
+pub fn home_page(site: &Site, post: Option<&Post>) -> String {
+    default_page(
+        site,
+        "ideas",
+        maud::html! {
+            @if let Some(post) = post {
+                a href={ (site.base_url) "/" (post.path.join("/")) } .catalogue-item {
+                    time datetime={ (post.date.to_rfc3339()) } .catalogue-time { (post.date.to_rfc2822()) }
+                    @if let Some(title) = &post.title {
+                        h1 .catalogue-title { (title) }
+                    }
+                    @else {
+                        .catalogue-title {}
+                    }
+                    .catalogue-line {}
+                    (PreEscaped(post.excerpt()))
+                }
+            }
+        },
+    ).into()
 }
 
 fn default_page(site: &Site, title: &str, content: Markup) -> Markup {
@@ -262,7 +284,8 @@ fn html_navigation(site: &Site) -> Markup {
                 }
                 ul {
                     li {
-                        a href={ (site.base_url) } { "Posts" }
+                        // TODO enumerate catalugues
+                        a href={ (site.base_url) "/default/page/0" } { "Posts" }
                     }
                     li {
                         a href={ (site.base_url) "/tags" } { del { "Tags" } }

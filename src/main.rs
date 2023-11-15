@@ -5,7 +5,7 @@ use std::{
 
 use anyhow::Context;
 use chrono::Utc;
-use ideas::{compile_scss, Catalogue, Post, Site};
+use ideas::{compile_scss, home_page, Catalogue, Post, Site};
 use walkdir::WalkDir;
 
 fn main() -> anyhow::Result<()> {
@@ -93,6 +93,10 @@ fn main() -> anyhow::Result<()> {
         let page = catalogue.render(&site, Some(prev_catalogue), None);
         write_page(build_dir, &catalogue.path, &page)?
     }
+
+    let post = posts.iter().max_by_key(|post| post.date);
+    let page = home_page(&site, post);
+    write_page(build_dir, &[], &page)?;
 
     Ok(())
 }
