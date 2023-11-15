@@ -16,14 +16,13 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn migrate_directory(dir: &Path, mut mapper: impl FnMut(&str) -> String) -> anyhow::Result<()> {
-    let dest_dir = Path::new("content");
-    create_dir_all(dest_dir)?;
-    let migrated_dir = Path::new("migrated");
-    create_dir_all(migrated_dir.join(dir))?;
+    let content_dir = Path::new("content");
+    let dest_dir = content_dir.join("default");
+    create_dir_all(&dest_dir)?;
     let mut redirect = File::options()
         .create(true)
         .append(true)
-        .open(migrated_dir.join("redirect.txt"))?;
+        .open(content_dir.join("redirect.txt"))?;
     for file in std::fs::read_dir(dir)? {
         let path = file?.path();
         let content = read_to_string(&path)?;
@@ -34,11 +33,10 @@ fn migrate_directory(dir: &Path, mut mapper: impl FnMut(&str) -> String) -> anyh
             .context(format!("{}", path.display()))?;
         write(
             dest_dir
-                .join(date.to_rfc3339())
+                .join(date.timestamp().to_string())
                 .with_extension(path.extension().unwrap_or_default()),
             &content,
         )?;
-        write(migrated_dir.join(&path), content)?;
         writeln!(
             redirect,
             "{}/{} => {}",
@@ -48,7 +46,7 @@ fn migrate_directory(dir: &Path, mut mapper: impl FnMut(&str) -> String) -> anyh
                     .and_then(|s| s.to_str())
                     .ok_or(anyhow::anyhow!("cannot get file stem"))?
             ),
-            date.to_rfc3339()
+            date.timestamp()
         )?
     }
     Ok(())
