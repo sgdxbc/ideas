@@ -121,51 +121,103 @@ impl Post {
         if let Some((excerpt, _)) = self.body.split_once("<!-- more -->") {
             excerpt.into()
         } else {
-            self.body.lines().next().unwrap_or_default().into()
+            scraper::Html::parse_fragment(&self.body)
+                .select(&scraper::Selector::parse("* > *").unwrap())
+                .next()
+                .map(|element| element.html())
+                .unwrap_or_default()
         }
+    }
+
+    pub fn render(
+        &self,
+        site: &Site,
+        prev_post: Option<&Self>,
+        next_post: Option<&Self>,
+    ) -> String {
+        default_page(
+            site,
+            &format!("{} \u{00bb} {}", site.name, self.canonical_title()),
+            maud::html! {
+                .post {
+                    .post-info {
+                        time datetime={ (self.date.to_rfc3339()) } { (self.date.to_rfc2822()) }
+                    }
+                    @if let Some(title) = &self.title {
+                        h1 .post-title { (title) }
+                    }
+                    @else {
+                        .post-title {}
+                    }
+                    .post-line {}
+                    (PreEscaped(&self.body))
+                }
+                // TODO post title
+                .pagination {
+                    @if let Some(next_post) = next_post {
+                        a href={ (site.base_url) "/" (next_post.path.join("/")) } .left .arrow {
+                            (PreEscaped("&#8592;"))
+                        }
+                    }
+                    @if let Some(prev_post) = prev_post {
+                        a href={ (site.base_url) "/" (prev_post.path.join("/")) } .right .arrow {
+                            (PreEscaped("&#8594;"))
+                        }
+                    }
+                    a href="#" .top { "Top" }
+                }
+                script src={ (site.base_url) "/assets/js/markdown-polyfill.js" } {}
+            },
+        )
+        .into()
     }
 }
 
-pub fn post_page(
-    site: &Site,
-    post: &Post,
-    prev_post: Option<&Post>,
-    next_post: Option<&Post>,
-) -> String {
-    default_page(
-        site,
-        &format!("{} \u{00bb} {}", site.name, post.canonical_title()),
-        maud::html! {
-            .post {
-                .post-info {
-                    time datetime={ (post.date.to_rfc3339()) } { (post.date.to_rfc2822()) }
-                }
-                @if let Some(title) = &post.title {
-                    h1 .post-title { (title) }
-                }
-                @else {
-                    .post-title {}
-                }
-                .post-line {}
-                (PreEscaped(&post.body))
-            }
-            .pagination {
-                @if let Some(next_post) = next_post {
-                    a href={ (site.base_url) "/" (next_post.path.join("/")) } .left .arrow {
-                        (PreEscaped("&#8592;"))
+#[derive(Debug)]
+pub struct Catalogue<'a> {
+    pub path: Vec<String>,
+    pub posts: Vec<&'a Post>,
+}
+
+impl Catalogue<'_> {
+    pub fn render(&self, site: &Site, prev: Option<&Self>, next: Option<&Self>) -> String {
+        let mut title = vec!["ideas"];
+        title.extend(self.path.iter().map(AsRef::<str>::as_ref));
+        default_page(
+            site,
+            &title.join(" \u{00bb} "),
+            maud::html! {
+                .catalogue {
+                    @for post in &self.posts {
+                        a href={ (site.base_url) "/" (post.path.join("/")) } .catalogue-item {
+                            time datetime={ (post.date.to_rfc3339()) } .catalogue-time { (post.date.to_rfc2822()) }
+                            @if let Some(title) = &post.title {
+                                h1 .catalogue-title { (title) }
+                            }
+                            @else {
+                                .catalogue-title {}
+                            }
+                            .catalogue-line {}
+                            (PreEscaped(post.excerpt()))
+                        }
                     }
                 }
-                @if let Some(prev_post) = prev_post {
-                    a href={ (site.base_url) "/" (prev_post.path.join("/")) } .right .arrow {
-                        (PreEscaped("&#8594;"))
+                .pagination {
+                    @if let Some(next) = next {
+                        a href={ (site.base_url) "/" (next.path.join("/")) } .left .arrow {
+                            (PreEscaped("&#8592;"))
+                        }
+                    }
+                    @if let Some(prev) = prev {
+                        a href={ (site.base_url) "/" (prev.path.join("/")) } .right .arrow {
+                            (PreEscaped("&#8594;"))
+                        }
                     }
                 }
-                a href="#" .top { "Top" }
-            }
-            script src={ (site.base_url) "/assets/js/markdown-polyfill.js" } {}
-        },
-    )
-    .into()
+            },
+        )
+        .into()
+    }
 }
 
 fn default_page(site: &Site, title: &str, content: Markup) -> Markup {

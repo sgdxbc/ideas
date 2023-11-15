@@ -5,7 +5,7 @@ use std::{
 
 use anyhow::Context;
 use chrono::Utc;
-use ideas::{compile_scss, post_page, Post, Site};
+use ideas::{compile_scss, Catalogue, Post, Site};
 use walkdir::WalkDir;
 
 fn main() -> anyhow::Result<()> {
@@ -50,27 +50,54 @@ fn main() -> anyhow::Result<()> {
         })
         .collect::<anyhow::Result<Vec<_>>>()?;
     posts.sort_unstable_by_key(|post| post.path.clone());
+
     if let Some(post) = posts.first() {
-        let page = post_page(&site, post, None, posts.iter().nth(1));
-        write_post_page(build_dir, &post.path, &page)?
+        let page = post.render(&site, None, posts.iter().nth(1));
+        write_page(build_dir, &post.path, &page)?
     }
     for window in posts.windows(3) {
         let [prev_post, post, next_post] = window else {
             unreachable!()
         };
-        let page = post_page(&site, post, Some(prev_post), Some(next_post));
-        write_post_page(build_dir, &post.path, &page)?
+        let page = post.render(&site, Some(prev_post), Some(next_post));
+        write_page(build_dir, &post.path, &page)?
     }
     let mut posts_rev = posts.iter().rev();
     if let (Some(post), Some(prev_post)) = (posts_rev.next(), posts_rev.next()) {
-        let page = post_page(&site, post, Some(prev_post), None);
-        write_post_page(build_dir, &post.path, &page)?
+        let page = post.render(&site, Some(prev_post), None);
+        write_page(build_dir, &post.path, &page)?
+    }
+
+    let catalogues = posts
+        .chunks(20)
+        .enumerate()
+        .map(|(page_num, posts)| Catalogue {
+            posts: posts.iter().collect(),
+            path: vec!["default".into(), "page".into(), page_num.to_string()],
+        })
+        .collect::<Vec<_>>();
+    if let Some(catelogue) = catalogues.first() {
+        let page = catelogue.render(&site, None, catalogues.iter().nth(1));
+        write_page(build_dir, &catelogue.path, &page)?
+    }
+    for window in catalogues.windows(3) {
+        let [prev_catalogue, catalogue, next_catalogue] = window else {
+            unreachable!()
+        };
+        let page = catalogue.render(&site, Some(prev_catalogue), Some(next_catalogue));
+        write_page(build_dir, &catalogue.path, &page)?
+    }
+    let mut catalogues_rev = catalogues.iter().rev();
+    if let (Some(catalogue), Some(prev_catalogue)) = (catalogues_rev.next(), catalogues_rev.next())
+    {
+        let page = catalogue.render(&site, Some(prev_catalogue), None);
+        write_page(build_dir, &catalogue.path, &page)?
     }
 
     Ok(())
 }
 
-fn write_post_page(build_dir: &Path, path: &[String], page: &str) -> anyhow::Result<()> {
+fn write_page(build_dir: &Path, path: &[String], page: &str) -> anyhow::Result<()> {
     let target_dir = build_dir.join(path.join("/"));
     create_dir_all(&target_dir)?;
     write(target_dir.join("index.html"), page)?;
