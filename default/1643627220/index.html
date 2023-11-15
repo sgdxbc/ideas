@@ -1,0 +1,41 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » 两种派发都传染性严重捏</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2022-01-31T19:07:00+08:00">Mon, 31 Jan 2022 19:07:00 +0800</time></div><h1 class="post-title">两种派发都传染性严重捏</h1><div class="post-line"></div><!-- more -->
+<p>想写东西的时候，打开博客而不是知乎的好处，就是可以想怎么下笔就怎么写，不用考虑别人或者自己能不能看得懂。</p>
+<p>如果换到知乎上的话，这篇我肯定得想一个clean room的例子，然后写得又慢又累。</p>
+<p>写在这里就直接把自己的所见所闻记流水账就好了。</p>
+<p>话又说回来，这些小孩子停也不停地发着红包，因为除此之外他们已经不认同所有其他的习俗了。这一辈人主导下的春节真不知道会是什么样子。</p>
+<hr />
+<p>我把oskr从C++切换回了Rust。切换之前的C++版本用静态派发，在那之前我还用Rust尝试了若干次静态派发。切换以后我决定试一下动态派发。</p>
+<p>对应到Rust的术语，就是把类型参数上的trait都替换成trait object了。</p>
+<p>刚开始写的很有感觉，但是逐渐感觉不太对了。</p>
+<hr />
+<p>oskr中的多态主要是围绕着两个抽象：transport和transport receiver。其中后者的多态被我用闭包干掉了。无论是C++还是Rust都分别给出了不同的不得不这么做的理由，同时又都很适合这么做，还挺有趣的。</p>
+<p>所以一切问题都只围绕着transport。具体地说，希望可以在测试用例中使用仿真transport，在benchmark中使用production的transport，目前来看几乎一定基于DPDK。如果有余力可以考虑提供一个借助内核的UDP实现，不过这是次要需求。</p>
+<p>最终的目标就是所有协议的实现都对支持它的transport完全无感。</p>
+<p>这个目标所带来的最大挑战在于transport不只是一个单独的类型。每种transport实现有对应的地址类型transport address。这个地址类型本身没有任何显著的接口，只是作为一个ID性质的存在。我希望它可以是值语义。</p>
+<p>对于协议实现的一方可以接受引用语义的transport address，但是如果像specpaxos一样采用了这个方案，那么transport一侧就要进行丑陋的向下转型，让我有点受不了。所以我多少还是想做一个静态派发的tranport address。</p>
+<p>另外，我从C++版本开始引入了一个新的概念RX buffer。它以RAII的方式管理RX数据包（对于DPDK来说就是mbuf）的生命周期，从而避免不必要的内存复制。</p>
+<p>与transport address类似，每一种transport也有自己的RX buffer类型。这回它更是不得不是一个值语义，因为不是值语义就没有RAII了。</p>
+<p>大概就是这么个情况。</p>
+<hr />
+<p>从目前用动态派发实现的现状来看，静态派发有着明显的优越性，或者说动态派发有先天性的不足，那就是其传染性。</p>
+<p>用Rust术语来讲（C++有着不同叫法的同一套规则，或者不如说这是编程范式根本性的限制），动态派发意味着trait object safe。这意味着所有方法不能出现类型参数。</p>
+<p>因此，如果transport使用了动态派发，作为出现在其参数上的transport address就不能静态派发了。这意味着也很难保留其值语义。</p>
+<p>实际上，我此前无意识的想在这种情况下提供一个值语义的transport address，以至于直接将其untype化了。其实还算可以接受的方案，只是和场面上的其他部分放在一起就不是很好看了。</p>
+<p>哪怕是没有出现在transport方法签名中的RX buffer，也会很难拥有值语义，因为我们没法在编译时得知它是哪个类型的transport对应的RX buffer类型。因为动态派发的transport没法编译时确定类型。</p>
+<p>然而正如上面所说的，RX buffer不可能不是值语义，所以此前我同样无意识的往其中塞了一个<code>*mut dyn Any</code>和一个<code>Arc&lt;dyn Transport&gt;</code>，然后意识到这有多怪，然后才开始写这个。</p>
+<p>这就是动态派发的传染性：一旦有一个对象的类型不在编译时确定，那么所有概念上和它 关联 的类型就全都确定不了了。当代码中出现了一个<code>dyn</code>，它就会引起更多的<code>dyn</code>出现，直到扩散到整个项目。</p>
+<hr />
+<p>那么我们来考虑一下静态派发吧。把transport做成协议实现的类型参数，把transport address和RX buffer都定为trait的关联类型。看起来很完美。</p>
+<p>也不尽然。从此之后，一切需要发消息的对象，无论是协议实现，客户端缓存表，有状态定时器（在transport还负责定时的时候），全部都要带上一个<code>&lt;T: Transport&gt;</code>。</p>
+<p>有些时候可以把这东西用一个临时的闭包代替（不过就是把一个类型参数<code>T: Transport</code>换成了另一个<code>F: FnOnce()</code>）。但大多数时候是不行的，因为闭包要活的太久了，它捕获的生命周期不允许。</p>
+<p>而且最重要的，我们解决了问题吗？</p>
+<p>如果transport receiver依然是动态派发，那么它很难接受一个静态派发的RX buffer类型的参数。唯一的办法，就是把<code>T: Transport</code>写到transport receiver的trait上面去。</p>
+<p>然后transport receiver要对所有的<code>T: Transport</code>实现trait。也许还会有别的问题。但首先恭喜，transport已经成功传染到了整个项目。</p>
+<p>这就是静态派发的传染性，一旦决定编译时多态一个对象，所有包含这个对象的类型就全都要加一个类型参数。如今的我已经学会节制。记得刚学Rust的时候，一个类型上面五个六个类型参数加得根本停不下来，很绝望。</p>
+<p>甚至只是几个月前，我还在尝试把transport和transport receiver都编译时多态，然后苦苦挣扎于类型参数的递归地狱。想想非常好笑。</p>
+<p>静态派发稍微强一点点的地方在于，它还是有一丝和动态派发和谐共处的可能性。毕竟静态派发是编译时信息更多的一种模式，信息多从理论上总归能兼容信息少。</p>
+<p>但是这种<code>impl&lt;T: Transport&gt; TransportReceiver&lt;T&gt; for ...</code>的blanket implementation形式，还是让人有点胆寒，感觉open world assumption已经在提刀而来的路上了。</p>
+<p>而且，相比起动态派发，静态派发写起来又啰嗦，编译又慢，这一点点强的地方实在是不够看。</p>
+<hr />
+<p>所以说，是时候发明一种更成熟的派发模式了吧？</p>
+</div><div class="pagination"><a class="left arrow" href="/ideas/default/1643440260">&#8592;</a><a class="right arrow" href="/ideas/default/1644114660">&#8594;</a><a class="top" href="#">Top</a></div><script src="/ideas/assets/js/markdown-polyfill.js"></script></main><footer><span>Compiled at <time datetime="2023-11-15T13:01:26.285651773+00:00">2023-11-15 13:01:26.285651773 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » 用Rust写点能用的</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2022-02-13T21:55:00+08:00">Sun, 13 Feb 2022 21:55:00 +0800</time></div><h1 class="post-title">用Rust写点能用的</h1><div class="post-line"></div><!-- more -->
+<p>差不多写出来以后转眼就放纵到了要回去的时间。临要走了才想起来这篇作文终于可以写了也该写了。</p>
+<p>唉，自从定下了<em>不把代码写完就不动笔写作文/文档/吐槽</em>的规矩以后，在这之前就再也没有写完过任何代码。真是忍的好痛苦。</p>
+<p><img src="https://user-images.githubusercontent.com/59077595/153756542-cc87306e-95bb-4ea0-bf34-5cb92df784bf.png" alt="Screenshot 2022-02-13 215914" /></p>
+<p>这回写的是给老板上课配套用的一个在线排队测试程序网站。整体是一个经典的HTTP服务器，服务一众浏览器客户端的同时与一个WebSocket客户端保持你来我往的通信，执行测试程序。</p>
+<p>登录用了GitHub的OAuth服务，数据库方面因为查询需求很简单就没有上传统的SQL数据库，用Redis对付起来。</p>
+<p>当然最重要的就是所有的实现都是用Rust写的（WebSocket客户端用了十几行Python）。oauth和redis当然是通过同名的库调用，它们俩以及Rust世界的一切都很好的基于了tokio。真的很美好。</p>
+<p>相比之下服务器框架的选择比较多了一些。因为我有对WebSocket的硬性需求，所以对服务器框架有这个具体的特殊要求。一开始试了试actix web，然后发现它的异步接口还是很半吊子，大概这已经可以算是某种半死不活了吧。然后改而用了warp。</p>
+<p>除此之外，序列化用serde_json之类的，就都没什么变化的空间了。</p>
+<p>warp这个框架最大的优点就是写起来好看。写业务逻辑感觉自己像是在写haskell或者elm，好像语法非常简陋一样，但是自己需要表达得好像也都能表达得清楚。不过在写根据请求路径提供文件下载的时候确实有一点点语义不够用出现，但这个主要还是内建电池不够用的原因，和抽象没什么直接关系。</p>
+<p>warp最大的缺点就是报错太不友好。由于对类型参数的极致运用，报错输出堪比C++模板元编程。实在是让人头大的同时完全得不到一点有用的信息。文档也是非常基本款（大体上还是够用的），让人很没有安全感。</p>
+<p>warp当中内建了rejection概念，在没有anyhow之前起到了anyhow的一个专用于服务器业务的子集的作用。可惜的是有了anyhow以后，anyhow的优势很明显，但是warp到目前还没有针对其调整出一个兼容的接口。好在进行几行代码的简单适配后也就可以用了。</p>
+<hr />
+<p>以往不管写什么领域的业务层代码，给我的开发体验无非就是两者之一：要么调的各个包之间对对方存在一些错误的假设（并没有任何库应该对此承担责任，大家的假设都是合理的），导致代码效率和美观性二者只能选择一个；要么一个巨大的遮天蔽日的框架把方方面面都覆盖到了，掌控住了，超出去的部分想都不要想根本写不出来。</p>
+<p>很多时候写到最后真的只剩下一种对不完美世界的无力感。心里想着不然还是不调包了，自己从头开始写算了。</p>
+<p>Rust终于让人看到了新的可能性。虽然这里那里还是会有一些类似于tokio版本兼容性之类的小瑕疵。Rust可以把其生态中的库给教训得服服帖帖。Rust可以让人产生一种自己在用一个大而全的库的错觉，但实际上那只是各个库之间的一致性和连贯性达到了一定程度。在别的语言中这要依靠某种<em>默契</em>才能实现，而在Rust中这可以通过语言本身设计理念的强大影响力对所有的库产生可观的塑造力。我很欣赏这一切。</p>
+<p>当我亲自动手写出自己的第一个Rust能用的程序以后，一切和我预想的一样。Rust和AS一并，让我的热情完全值得。</p>
+</div><div class="pagination"><a class="left arrow" href="/ideas/default/1644500940">&#8592;</a><a class="right arrow" href="/ideas/default/1644903360">&#8594;</a><a class="top" href="#">Top</a></div><script src="/ideas/assets/js/markdown-polyfill.js"></script></main><footer><span>Compiled at <time datetime="2023-11-15T13:01:26.285651773+00:00">2023-11-15 13:01:26.285651773 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>

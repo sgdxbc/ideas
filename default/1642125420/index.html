@@ -1,0 +1,15 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » 1642125420</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2022-01-14T09:57:00+08:00">Fri, 14 Jan 2022 09:57:00 +0800</time></div><div class="post-title"></div><div class="post-line"></div><!-- more -->
+<p>趁开会之前少写几句。</p>
+<p>这两天在练习vim。并没有打算直接用命令行，还是在VSCode里用插件。毕竟有原生的窗口管理还是方便的。</p>
+<p>这么做主要的动机就是减少鼠标的使用。感觉如果右手不用动来动去的话对于输入的效率还是能有提升的。</p>
+<p>同样的道理，方向键也不要用了。这个在布局奇怪的键盘上确实对效率有影响，我是确认过的。</p>
+<p>因为要改打字习惯，如果同时写新代码的话感觉有点不堪重负，所以先合理摸鱼个几天，把该了解的组合键都记住吧。</p>
+<hr />
+<p>今天思考了一个在线OJ的架构。</p>
+<p>本来是专门给5223设计的，后来想想看，服务器端应该可以比较通用。</p>
+<p>这个OJ比较不同的一点就是默认要跑很久。所以要做排队系统，要防止重复排队，要提示预计排到号的倒计时。</p>
+<p>另外，它还假设需要专门的机器去跑数据点。所以后端和执行代码的环境是分开的。两者通过websocket通信。</p>
+<p>再假设执行的机器没有公开对外的监听手段，所以由它主动联系后端。</p>
+<p>然后后端大概用rust来写。执行机器上的脚本按理说应该非常简单，只要是能轻松使用websocket和docker的编程工具都差不多。</p>
+<p>看看有空把它写一下吧。</p>
+</div><div class="pagination"><a class="left arrow" href="/ideas/default/1642035720">&#8592;</a><a class="right arrow" href="/ideas/default/1642470660">&#8594;</a><a class="top" href="#">Top</a></div><script src="/ideas/assets/js/markdown-polyfill.js"></script></main><footer><span>Compiled at <time datetime="2023-11-15T13:01:26.285651773+00:00">2023-11-15 13:01:26.285651773 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>

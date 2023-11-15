@@ -1,0 +1,28 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » 1643117580</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2022-01-25T21:33:00+08:00">Tue, 25 Jan 2022 21:33:00 +0800</time></div><div class="post-title"></div><div class="post-line"></div><!-- more -->
+<p>一到周二晚上就不知道干什么。</p>
+<p>周三往后基本就看着AS的直播摸鱼了。</p>
+<p>周一拿Hanser当AS代餐。</p>
+<p>周二谁都不播。只能看看QA。</p>
+<p>尤其是现在，周二前半个晚上还有课。</p>
+<p>上完课以后就更不想干活了。</p>
+<p>打完一局Dota，离回去还有这么一会。很尴尬。</p>
+<hr />
+<p>把5223的lab写完以后，下一项既定任务是写一个OJ。总之今天先写了写自己玩的。</p>
+<p>虽然oskr用C++写了很多，但是还是想换成Rust。</p>
+<p>一个是C++虽然是C++20，但用起来还是很衰老。</p>
+<p>给人一种满头白发还学年轻人赶时髦，常怀一颗年轻的心，的心酸感觉。</p>
+<p>另一个是，随手捡出来一篇看起来平平无奇的论文准备组会上讲，然后发现它是用Rust实现的。</p>
+<p>忽然感觉，除非我已经是业界翘楚，有决定自己技术栈的资本，否则我就得用Rust来写，不然，我就得另外花精力证明自己的先进性。</p>
+<p>明明Rust才是我的主场啊。</p>
+<p>为什么要放弃主场，然后还要被人误会不先进呢。简直自讨苦吃。</p>
+<hr />
+<p>用Rust写oskr不算容易。好在已经尝试了好多次，这回的模型接口似乎已经足够合理的。</p>
+<p>目前只有一点小瑕疵。</p>
+<p>Transport在各个Receiver之间共享，因此套在<code>Arc</code>里面。只要求我们一旦开始构建Receiver，Transport就不能再变化了，即再也没有<code>&amp;mut</code>。</p>
+<p>然而，如果想把Receiver注册在Transport中，就要更改Transport。也就是说，需要在创建Receiver以后再更改Transport。两者产生了矛盾。</p>
+<p>实际上，注册一个Receiver并不需要创建完整的Receiver（即持有Transport的<code>Arc</code>的对象），因此，按照Rust的正确，应该把Receiver的创建拆开成两个阶段。</p>
+<p>这个思路理论上可行，只是直接写肯定要写很多无聊的代码。想想怎么搞简练一点，看起来好看点。</p>
+<p>当然，还有其他更赋予表面的方法，以前的我也能想得到的，比如把Transport包在<code>Mutex</code>里之类的。那种就太滑稽了，不会再考虑的。</p>
+<hr />
+<p>以后这种时候可以考虑看一会Software Foundation。</p>
+</div><div class="pagination"><a class="left arrow" href="/ideas/default/1642905480">&#8592;</a><a class="right arrow" href="/ideas/default/1643290980">&#8594;</a><a class="top" href="#">Top</a></div><script src="/ideas/assets/js/markdown-polyfill.js"></script></main><footer><span>Compiled at <time datetime="2023-11-15T13:01:26.285651773+00:00">2023-11-15 13:01:26.285651773 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>
