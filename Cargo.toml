@@ -9,6 +9,7 @@ edition = "2021"
 anyhow = { version = "1.0.75", features = ["backtrace"] }
 chrono = "0.4.31"
 markdown = "1.0.0-alpha.14"
+maud = "0.25.0"
 rsass = "0.28.6"
 serde = { version = "1.0.192", features = ["derive"] }
 serde_yaml = "0.9.27"
