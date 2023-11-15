@@ -9,7 +9,7 @@ use serde::Deserialize;
 
 pub fn compile_scss() -> anyhow::Result<Vec<u8>> {
     Ok(rsass::compile_scss_path(
-        "resource/assets/tale.scss".as_ref(),
+        "resources/sass/tale.scss".as_ref(),
         Format {
             style: Compressed,
             ..Default::default()
@@ -90,7 +90,7 @@ pub struct Site {
 
 #[derive(Debug)]
 pub struct Post {
-    path: Vec<String>,
+    pub path: Vec<String>,
     date: DateTime<FixedOffset>,
     title: Option<String>,
     body: String, // compiled
@@ -141,20 +141,28 @@ pub fn post_page(
                     time datetime={ (post.date.to_rfc3339()) } { (post.date.to_rfc2822()) }
                 }
                 @if let Some(title) = &post.title {
-                    h1 { (title) }
+                    h1 .post-title { (title) }
+                }
+                @else {
+                    .post-title {}
                 }
                 .post-line {}
                 (PreEscaped(&post.body))
             }
             .pagination {
                 @if let Some(next_post) = next_post {
-                    a href={ (site.base_url) "/" (next_post.path.join("/")) } .left .arrow { "&#8592;" }
+                    a href={ (site.base_url) "/" (next_post.path.join("/")) } .left .arrow {
+                        (PreEscaped("&#8592;"))
+                    }
                 }
                 @if let Some(prev_post) = prev_post {
-                    a href={ (site.base_url) "/" (prev_post.path.join("/")) } .left .arrow { "&#8594;" }
+                    a href={ (site.base_url) "/" (prev_post.path.join("/")) } .right .arrow {
+                        (PreEscaped("&#8594;"))
+                    }
                 }
                 a href="#" .top { "Top" }
             }
+            script src={ (site.base_url) "/assets/js/markdown-polyfill.js" } {}
         },
     )
     .into()
@@ -200,17 +208,16 @@ fn html_navigation(site: &Site) -> Markup {
                 a href={ (site.base_url) } {
                     h2 .nav-title { (site.name) }
                 }
-            }
-
-            ul {
-                li {
-                    a href={ (site.base_url) } { "Posts" }
-                }
-                li {
-                    a href={ (site.base_url) "/tags" } { del { "Tags" } }
-                }
-                li {
-                    a href={ (site.base_url) "/about" } { "About" }
+                ul {
+                    li {
+                        a href={ (site.base_url) } { "Posts" }
+                    }
+                    li {
+                        a href={ (site.base_url) "/tags" } { del { "Tags" } }
+                    }
+                    li {
+                        a href={ (site.base_url) "/about" } { "About" }
+                    }
                 }
             }
         }
