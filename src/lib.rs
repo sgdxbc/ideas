@@ -1,8 +1,11 @@
-use std::str::FromStr;
+use std::{mem::replace, rc::Rc, str::FromStr};
 
 use anyhow::Context;
 use chrono::{DateTime, FixedOffset, LocalResult, NaiveDate, NaiveDateTime, Utc};
+use html5ever::{tendril::TendrilSink, QualName};
 use markdown::Options;
+use markup5ever::{local_name, namespace_url, ns, Attribute};
+use markup5ever_rcdom::{Node, NodeData, RcDom};
 use maud::{Markup, PreEscaped};
 use rsass::output::{Format, Style::Compressed};
 use serde::Deserialize;
@@ -93,20 +96,66 @@ pub struct Post {
     pub path: Vec<String>,
     pub date: DateTime<FixedOffset>,
     title: Option<String>,
-    body: String, // compiled
+    body: String,         // compiled
+    body_excerpt: String, // compiled
 }
 
 impl Post {
     pub fn new(path: Vec<String>, content: &str) -> anyhow::Result<Self> {
+        // println!("{path:?}");
         let frontmatter = content.parse::<Frontmatter>()?;
+        let mut body_dom = html5ever::parse_document(RcDom::default(), Default::default())
+            .from_utf8()
+            .read_from(&mut compile_markdown(content).as_bytes())?;
+        Self::walk_markdown_node(&mut body_dom.document);
+        let mut body = Vec::new();
+        html5ever::serialize(
+            &mut body,
+            &markup5ever_rcdom::SerializableHandle::from(body_dom.document.clone()),
+            Default::default(),
+        )?;
+        Self::make_excerpt(&mut body_dom.document);
+        let mut body_excerpt = Vec::new();
+        html5ever::serialize(
+            &mut body_excerpt,
+            &markup5ever_rcdom::SerializableHandle::from(body_dom.document.clone()),
+            Default::default(),
+        )?;
         Ok(Self {
             path,
             date: frontmatter
                 .date
                 .ok_or(anyhow::anyhow!("missing date in frontmatter"))?,
             title: frontmatter.title,
-            body: compile_markdown(content),
+            body: String::from_utf8(body)?,
+            body_excerpt: String::from_utf8(body_excerpt)?,
         })
+    }
+
+    fn walk_markdown_node(node: &mut Rc<Node>) {
+        if let NodeData::Element { name, attrs, .. } = &node.data {
+            if name == &QualName::new(None, ns!(html), "pre".into()) {
+                let attr = Attribute {
+                    name: QualName::new(None, ns!(), "class".into()),
+                    value: "highlight".into(),
+                };
+                attrs.borrow_mut().push(attr.clone());
+                let pre_node = replace(
+                    node,
+                    Node::new(NodeData::Element {
+                        name: QualName::new(None, ns!(html), "div".into()),
+                        attrs: vec![attr].into(),
+                        template_contents: None.into(),
+                        mathml_annotation_xml_integration_point: false,
+                    }),
+                );
+                node.children.borrow_mut().push(pre_node);
+                return;
+            }
+        }
+        for child in node.children.borrow_mut().iter_mut() {
+            Self::walk_markdown_node(child)
+        }
     }
 
     fn canonical_title(&self) -> String {
@@ -117,16 +166,33 @@ impl Post {
         }
     }
 
-    fn excerpt(&self) -> String {
-        if let Some((excerpt, _)) = self.body.split_once("<!-- more -->") {
-            excerpt.into()
-        } else {
-            scraper::Html::parse_fragment(&self.body)
-                .select(&scraper::Selector::parse("* > *").unwrap())
-                .next()
-                .map(|element| element.html())
-                .unwrap_or_default()
+    fn make_excerpt(node: &Node) {
+        let mut more_comment = None;
+        for (index, child) in node.children.borrow().iter().enumerate() {
+            if let NodeData::Element { name, .. } = &child.data {
+                // println!("{name:?}");
+                if matches!(name.local, local_name!("html")) {
+                    let children = child.children.borrow();
+                    assert_eq!(children.len(), 2);
+                    return Self::make_excerpt(children.last().unwrap());
+                }
+                if matches!(name.local, local_name!("body")) {
+                    let children = child.children.borrow();
+                    assert_eq!(children.len(), 1);
+                    return Self::make_excerpt(children.last().unwrap());
+                }
+            }
+
+            if let NodeData::Comment { contents } = &child.data {
+                if contents.trim() == "more" {
+                    more_comment = Some(index);
+                    break;
+                }
+            }
         }
+        node.children
+            .borrow_mut()
+            .truncate(more_comment.unwrap_or(1))
     }
 
     pub fn render(
@@ -166,7 +232,6 @@ impl Post {
                     }
                     a href="#" .top { "Top" }
                 }
-                script src={ (site.base_url) "/assets/js/markdown-polyfill.js" } {}
             },
         )
         .into()
@@ -198,7 +263,7 @@ impl Catalogue<'_> {
                                 .catalogue-title {}
                             }
                             .catalogue-line {}
-                            (PreEscaped(post.excerpt()))
+                            (PreEscaped(&post.body_excerpt))
                         }
                     }
                 }
@@ -235,7 +300,7 @@ pub fn home_page(site: &Site, post: Option<&Post>) -> String {
                         .catalogue-title {}
                     }
                     .catalogue-line {}
-                    (PreEscaped(post.excerpt()))
+                    (PreEscaped(&post.body_excerpt))
                 }
             }
         },
