@@ -1,10 +1,9 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » 1645928820</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2022-02-27T10:27:00+08:00">Sun, 27 Feb 2022 10:27:00 +0800</time></div><div class="post-title"></div><div class="post-line"></div><!-- more -->
-<p>对于编程语言，有一种特殊的感受，我一般形容为<em>仿佛在写C++</em>。</p>
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » 1645928820</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2022-02-27T10:27:00+08:00">Sun, 27 Feb 2022 10:27:00 +0800</time></div><div class="post-title"></div><div class="post-line"></div><!-- more --><html><head></head><body><p>对于编程语言，有一种特殊的感受，我一般形容为<em>仿佛在写C++</em>。</p>
 <p>简单的说，就是特性互相之间打架。</p>
 <p>在C++当中这个现象已经形容了恐怖的闭环：为了解决特性打架，专门加入了新的特性，然后更多的特性带来更多的打架。</p>
 <p>大部分其他语言其实还好，仅仅是偶尔的既视感，并没有实质性的危害到语言本身。</p>
 <p>也有一些语言是完全没有这种现象的。但那些语言多半是秉持极简的思路设计的。为了规避形似C++而付出了代价。</p>
-<hr />
+<hr>
 <p>在Rust当中互相打架的特性向来不多。</p>
 <p>我过去曾觉得trait object的设计让我产生了面对C++一般的难受。我以为它会像编译时分发一样工作，结果发现它们有很大的区别。</p>
 <p>但后来我很快意识到，这不过是Rust的仁慈，让静态和动态分发复用了相似的语法，它们本来就是截然不同的存在。</p>
@@ -13,7 +12,7 @@
 <p>类似的还有对trait的blanket implementation，因为rust遵循open world assumption而导致的对impl的严格限制。过去很难搞懂到底用户会不会被允许以我预期的方式使用我的trait。</p>
 <p>现在规则有了一定程度的简化，并且这个特性其实很少会接触到，所以大部分时间都被我忘记了。</p>
 <p>在绝大多数时候Rust给我一种特性不但完全不打架，而且充分默契，设计的一致性和完整性爆表的感觉。经典的例子莫过于，对应于三种生命周期语义：移动，独占借用和共享借用，闭包有着三种对应的<code>FnOnce</code>，<code>FnMut</code>和<code>Fn</code>，迭代器一般也有三种对应的<code>into_iter</code>，<code>iter_mut</code>和<code>iter</code>。设计美感拉满。</p>
-<hr />
+<hr>
 <p>生命周期可能会成为一个例外，而且是永久性的，伴随这门语言走到终结。</p>
 <p>生命周期是隐式的。很多时候一些复杂的生命周期是写不出来的。这是Rust坦然承认的一点。就像C89里就是没法生命循环作用域变量一样。这些作用域，从概念上是存在的，但语言没有表达的能力。</p>
 <p>在类型签名上面这导致了无法避免的冲突：类型签名是对外的接口，是编译器自动推导的边界。无论如何，类型签名必须是显式的。</p>
@@ -26,7 +25,7 @@
 <p>而协变逆变更是完全没有拓展的意思，连对应的unstable trait都没有。因为真的，用不上。</p>
 <p>这些真的就是生命周期标记所带来的，纯粹的负担和代价。</p>
 <p>虽然这份代价算是很隐蔽了。虽然我也没有什么替代方案，并没有能力设计出一套更好的解决方案。Rust的一部分有着形似C++的隐患，这已经成为了永久的事实。</p>
-<hr />
+<hr>
 <p>如果要我仅限在Rust和C++之间选择，我是没有任何犹豫的。当我已经完全在用写Rust的思路去写C++的时候，我就明白了。</p>
 <p>但设计一门好的编程语言，这条路还远远没有抵达终点。</p>
-</div><div class="pagination"><a class="left arrow" href="/ideas/default/1645872600">&#8592;</a><a class="right arrow" href="/ideas/default/1646098380">&#8594;</a><a class="top" href="#">Top</a></div><script src="/ideas/assets/js/markdown-polyfill.js"></script></main><footer><span>Compiled at <time datetime="2023-11-15T13:14:13.978268960+00:00">2023-11-15 13:14:13.978268960 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>
+</body></html></div><div class="pagination"><a class="left arrow" href="/ideas/default/1645872600">&#8592;</a><a class="right arrow" href="/ideas/default/1646098380">&#8594;</a><a class="top" href="#">Top</a></div></main><footer><span>Compiled at <time datetime="2023-11-16T11:59:50.938596423+00:00">2023-11-16 11:59:50.938596423 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>

@@ -1,7 +1,6 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » specpaxos代码库的一些讨论</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2021-12-15T16:45:00+08:00">Wed, 15 Dec 2021 16:45:00 +0800</time></div><h1 class="post-title">specpaxos代码库的一些讨论</h1><div class="post-line"></div><!-- more -->
-<p>我曾经想过很多次，ddl之后一觉醒来的第一件事我会做什么。我从没想到自己是在写这个。</p>
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » specpaxos代码库的一些讨论</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2021-12-15T16:45:00+08:00">Wed, 15 Dec 2021 16:45:00 +0800</time></div><h1 class="post-title">specpaxos代码库的一些讨论</h1><div class="post-line"></div><!-- more --><html><head></head><body><p>我曾经想过很多次，ddl之后一觉醒来的第一件事我会做什么。我从没想到自己是在写这个。</p>
 <p>当然转过来想想是很合理的。毕竟一时半会我的脑子里什么别的都没有。我的心又受了C++和分布式联合带来的重创。我还能做什么呢。</p>
-<hr />
+<hr>
 <p>趁热打铁，总结一些specpaxos衍生出的这套codebase的瑕疵。各种类型的问题都有。此时此刻我当然是抱着为重写做准备的心态来总结的。希望后续可以切换到一个更理性的状态。</p>
 <p>protobuf的性能和其他问题。代码库中纯计算任务（本身也不多）大体上都有着合理的性能开销（并行模型下面再讨论），只有序列化/反序列化慢的离谱。在0/0性能测试中反序列化的时间稳定大于100%的消息处理时间，而且常常达到两到三倍的延迟比。这也导致了对于baseline把反序列化拿到工作线程中去可以使吞吐翻倍这种离谱的现象。另外，使用带有代码生成的方案对于编辑器的代码分析不算友好。通常有代码生成环节的工作流程都是生成一次代码然后一万年不改变（或者永远向后兼容的改变，也是protobuf设计的一个重要目标），然而这并不适用于这个项目的场合。</p>
 <p>说到性能，其实无论是protobuf还是内核/libevent执行模型，都有一个共同的性质就是在架构设计初期没有预想到后续工作在延迟方面突飞猛进的进步。在吞吐量预期100K左右时，每个op有10us的 线性 时间配额，也就是说可以流水线化的步骤不需要算在这10us里，那么拿出2-3us去做一些基础设施服务是可以接受的——更不用说很多协议对replica之间通信的要求使得所有本地的延迟都隐藏在巨大的网络延迟之下了。然而当性能逐渐朝着400-500K发展时，每个op只有接近2us的样子，这时候把消息解包出来就花了1us多，后面的工作啥也不用干了。不管今后还要再做什么工作，对延迟/吞吐量的目标永远不会走回头路。可以说，达到这个性能区间以后量变逐渐引起质变了。</p>
@@ -20,25 +19,25 @@
 <p>由于原样转发的要求，还导致了很多协议中由于用到了<code>BufferMessage</code>而莫名其妙依赖<code>sequencer.h</code>的奇特景象，哈哈。</p>
 </blockquote>
 <p>另一方面，在<code>TransportReceiver</code>里做消息解析从定位上来说的确是合理的，然而问题是<code>TransportReceiver</code>是一个天生顺序线性独占执行的对象，而处理消息本身又太慢了不得不并行优化（就算替换掉了protobuf，到了有签名的消息还是要遭重），目前拿<code>Runner</code>勉强糊了一下，但显然把这个调度模块塞进<code>Transport</code>还是更合理的做法。唉，只能说这是一个工程倒逼设计的惨烈现场。</p>
-<p>说到签名，关于数字签名的身份管理系统，这个东西整个代码库里是没有的，也找不到一个合适的地方可以临时糊一下：身份应该是一个可以从<code>TransportAddress</code>查询到的东西，这就要从根上开始改了。所以现在其实所有replica用了同一个身份<code>&quot;Steve&quot;</code>，这样也就不用查谁的身份是什么了。最起码还是得做到libhotstuff的程度，每个replica能设置不同的公私钥才行。</p>
+<p>说到签名，关于数字签名的身份管理系统，这个东西整个代码库里是没有的，也找不到一个合适的地方可以临时糊一下：身份应该是一个可以从<code>TransportAddress</code>查询到的东西，这就要从根上开始改了。所以现在其实所有replica用了同一个身份<code>"Steve"</code>，这样也就不用查谁的身份是什么了。最起码还是得做到libhotstuff的程度，每个replica能设置不同的公私钥才行。</p>
 <p>关于<code>Message</code>的设计已经提前吐槽过一次了。简单的说层数太多的时候写起来非常麻烦，格式类似于</p>
-<pre><code>proto::Message m;
+<div class="highlight"><pre class="highlight"><code>proto::Message m;
 auto &amp;some_case = *m.mutable_some_case();
 some_case.some_data = some_data;  // 重复直到设置所有需要的字段
 PBMessage pb_layer(m);
 SignedAdapter signed_layer(pb_layer, identifier);
 // 也许这里再来一个TOMBFTLayer……
 // 最后才能拿给transport
-</code></pre>
+</code></pre></div>
 <p>当然，按理说只要每一层都提供移动构造函数，可以把这些层给嵌套到一行里面去，但是局限性很强。先不说目前的<code>Message</code>模型是引用语义，要怎么提供移动构造函数；这个是发消息，收消息的时候就怎么都省不了了。更不要提在一些很限制的场合，必须要通过protobuf包签名层包protobuf来实现，还得手动调用<code>Serialize</code>，就更加麻烦了。</p>
 <p>此外<code>Message</code>本身的设计也有点瑕疵，作为引用语义把序列化和反序列化合二为一，在只序列化的时候也不能用<code>const</code>引用来构造（因为构造的时候也不知道是想序列化还是反序列化），从而导致一些不美观的<code>mutable</code>之类的。总而言之，这个其实就是在设计<code>Message</code>的时候完全是照着就一层<code>PBMessage</code>来设计的所导致的，没想到后来事情一发不可收拾= =</p>
 <p>引用语义的一个坏处就是传参很难。比如处理一个需要存下来的带签名的消息，只传验证过的protobuf对象是不行的，再单独传一个签名也是不行的，必须得把原始的整个二进制序列都传掉。如果出现了嵌套签名消息的消息那参数就更多了。这还会导致一个潜在的生命周期维护问题，尤其是在多线程环境下，跨线程复制以后，携带的引用基本上肯定是坏掉的了，写起来太容易出错了。当然，直接改成值语义也有它本身的问题，有些场合反而也不合适。</p>
 <p>写了不少了，最后写一个比较重要的<code>Transport</code>收包设计。在单线程工作模式下，收包和处理包抢夺同一个线程，在软件层面上其实没有消息缓冲区，没处理的包都缓存在网卡队列里面。一般来说这个队列肯定是够的，但是也存在着像TOMBFT这种三个速度快的replica联手把一个慢的replica干爆的情况，这种情况下的网卡队列丢包是非常不可控的，后果非常恶劣，一旦发生基本上软件层面没有任何挽回的办法。一个更好的做法可能是把所有包都收上来，在软件层面缓存，这样一面可以保证不存在网卡丢包，同时通过一些精巧的设计，也许可以优化处理包的顺序，比如把state transfer reply拉到最高优先级之类的。</p>
-<hr />
+<hr>
 <p>整个codebase处在有一点历史包袱但比较整洁的状态。手写的Makefile不算尽善尽美，但也没损失什么。</p>
 <p>在C++层面上，工程层面的提升选项主要有改写成全头文件形式，和使用比较现代的构建系统比如meson。基于个人口味一些工具组件相比自己写的私有代码更偏好依赖开源库，但这都还好。</p>
 <p>如果可以从一开始就围绕DPDK，将其作为一等公民，将内核和模拟<code>Transport</code>都当作是辅助测试工具，也许可以有助于设计出更适合超高性能的协议的架构。</p>
 <p>在C++之外，主要可以考虑Rust和Go。Rust在其允许的范围内，想要把代码写对写好比C++容易太多了。但是在这个项目里面确实有一点点Rust不允许我们写的成分。另外Rust还是很新，大部分需要的基础设施确实都有好的选择，但几乎都只有唯一的选择，如果不好用就会被绑架。</p>
 <p>Go的话对于写并行很方便，虽然这个项目的并行主要应该封装在<code>Transport</code>里面，不会到处都涉及，但有GC也挺好，而且工程项目的特点就是到处都是例外情况。有GC也许对性能不是一件好事，但是这个项目其实不需要GC，除了数据包以外没有任何需要对象是创建完需要在程序终止之前回收的。Go是有值语义的语言，所以GC压力和Java根本不是一个水平。但基于个人喜好大概还是不会考虑。</p>
 <p>总感觉还漏下了不少，大概先写这些吧。</p>
-</div><div class="pagination"><a class="left arrow" href="/ideas/default/1639320480">&#8592;</a><a class="right arrow" href="/ideas/default/1639719480">&#8594;</a><a class="top" href="#">Top</a></div><script src="/ideas/assets/js/markdown-polyfill.js"></script></main><footer><span>Compiled at <time datetime="2023-11-15T13:14:13.978268960+00:00">2023-11-15 13:14:13.978268960 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>
+</body></html></div><div class="pagination"><a class="left arrow" href="/ideas/default/1639320480">&#8592;</a><a class="right arrow" href="/ideas/default/1639719480">&#8594;</a><a class="top" href="#">Top</a></div></main><footer><span>Compiled at <time datetime="2023-11-16T11:59:50.938596423+00:00">2023-11-16 11:59:50.938596423 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>
