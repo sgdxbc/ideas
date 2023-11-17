@@ -62,6 +62,9 @@ impl FromStr for Frontmatter {
 }
 
 fn parse_date(date: &str) -> anyhow::Result<DateTime<FixedOffset>> {
+    if let Ok(date) = DateTime::parse_from_rfc2822(date) {
+        return Ok(date);
+    }
     if let Ok(date) = DateTime::parse_from_str(date, "%F %R %z") {
         return Ok(date);
     }
