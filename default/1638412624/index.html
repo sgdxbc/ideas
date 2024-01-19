@@ -60,4 +60,4 @@ case proto::PBFTMessage::SubCase::kPreprepare: {
 </code></pre></div>
 <p>最后在传递两个子消息的同时，还得把其中一个的字节数据也传进去，因为要往quorum certification里放，放的话肯定得放有签名的。有签名就不能有protobuf消息结构，因为签名在protobuf外面。</p>
 <p>每一层都要单独传，参数给人一种非常冗余的感觉。也可能应该把 传所有能传的 这种 冗余 形式定义为默认，通常的做法其实都是省略了很多参数的特殊情况吧。</p>
-</body></html></div><div class="pagination"><a class="left arrow" href="/ideas/default/1638411458">&#8592;</a><a class="right arrow" href="/ideas/default/1638415198">&#8594;</a><a class="top" href="#">Top</a></div></main><footer><span>Compiled at <time datetime="2024-01-19T06:00:19.143472700+00:00">2024-01-19 06:00:19.143472700 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>
+</body></html></div><div class="pagination"><a class="left arrow" href="/ideas/default/1638411458">&#8592;</a><a class="right arrow" href="/ideas/default/1638415198">&#8594;</a><a class="top" href="#">Top</a></div></main><footer><span>Compiled at <time datetime="2024-01-19T06:07:13.645300390+00:00">2024-01-19 06:07:13.645300390 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>
