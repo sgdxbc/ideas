@@ -1,0 +1,22 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » 1705638962</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2024-01-19T12:36:02+08:00">Fri, 19 Jan 2024 12:36:02 +0800</time></div><div class="post-title"></div><div class="post-line"></div><html><head></head><body><p>今天的科研思考进行得相当顺利。提不起足够的劲去干实事，写点有的没的。</p>
+<p>今天的唠嗑中提到了未来做什么工作的话题。想让我去干点教书育人相关的业务大概还需要进行诸多改装，属于是高投入高回报的一种选择——风险也不算太低，毕竟教职不是想找就能找到的。</p>
+<p>大厂上班的提议被我下意识抗拒。编程含量高的工作多种多样，也不能一概而论。就比方说，进大厂去给广告推送微调大模型算法，这种活谁爱干谁干去。</p>
+<p>我想我适合做的是那种主导项目方向和进度的编程工作。要有目的有计划地编程，不要兵来将挡水来土掩地编程。这种工作在大厂之外也有，多半是以靠捐赠/冠名养活的开源项目维护者的形式；在大厂内也有，一般是一些内部项目/实验性质项目/早期孵化项目的主要开发兼项目主管。和架构师/技术总监有区别。我要做那种可以灵活地根据开发形势制定后续目标/期望/可行性的工作，走一步看一步的工作，不要做那种行也得上不行也得上的工作。老p人了。不能根据不同的情况分别讨论的工作是不能接受的。</p>
+<p>大厂外的这种工作是可以转化进大厂内的。Python创始人Guido就是被微软招安了的。Linus也算是有人提供了个班上，虽然不是什么知名大厂。这种收编通常是贪图开发者的名气，以收编一人以得全社区拥戴为目的。这人进来了就达到目标，所以也不会对ta提出什么具体的工作要求。换句话说，做到这一步就可以在拥有铁饭碗的同时想干嘛干嘛，属于是这条路线的上限了。</p>
+<p>我目前在科研路线上的最大障碍是似乎缺乏敏锐捕捉学界需求的天赋。如果换成上述赛道，捕捉不到需求显然还是白搭。但是我觉得对这个天赋的要求上还是有些许不同的，也许我还算能胜任。不管怎么样，先投入些经历创办点项目总归是必要的，总不能指望一个项目就成为开源社区大佬。</p>
+<hr>
+<p>刚才看了MC配乐作者C418和微软纠纷的小故事，又一次想起来自己写个MC的念头。我在写游戏上的兴趣点向来是不缺的，拿这作为一个练手项目显然很合适。（至少比写个新的博客网站生成器来的合适。）</p>
+<p>我前一阵研究了一下valence，用Rust重写的MC服务器框架。刚才又去看了一眼，似乎处于有些停滞的活跃开发状态。我猜测它可能面临着显然要做的都做完了而可做可不做的又不知道做些什么的境地，正好上游项目（bevy）高度不稳定所以三天两头要跟着重构，MC本身也会发新版本需要跟进，于是进入了一种假装自己有很多成果的阶段（其实都不是真的成果），年纪轻轻就没了朝气。</p>
+<p>不过我目前认为做个兼容原版MC的服务器/客户端并不是什么很有必要的事。MC不是Python，它的官方实现不是什么金科玉律，它的官方玩法也不过都是拍脑袋决定下来的，兼容它除了让自己被屎山恶心到以外，并不会让自己做出来的游戏更好玩。</p>
+<p>实际上，MC的官方代码已经烂且政治不正确到了如此境地，哪怕我只是打出以下旗号</p>
+<ul>
+<li>没有历史包袱的正确代码架构，提升游戏运行效率且提升游戏模组开发效率</li>
+<li>采用合适许可证的开放架构，面向微软的反叛军
+就足以对一群人产生足够的吸引力了。完全不需要在玩法上动什么脑筋，只要复刻核心玩法，并且确保现有的知名特性都能被复刻。真是个划算的买卖。</li>
+</ul>
+<p>不过，最好还是能在玩法上做出一些革新。第一个做MC的人是天才，第二个做的人只能是庸才，哪怕他做出的是最正确的MC。在认命当庸才之前我还是再努力努力。</p>
+<p>首先我们来确定一下有什么是我们在设计玩法时必须遵循的。然后再看从哪下手动手脚。</p>
+<p>一款叫MineCraft的游戏必须包含两部分。Mine直接应对挖洞采矿的部分，实际要求的是必须包含在随机开放世界中收集开宝箱的玩法。这种玩法应该是roguelike的变体，在其基础上突出了开放/近似无限世界的特点。这既包含了地图的无限也包含了分支线路的无限。</p>
+<p>Craft直接对应了合成工艺的部分，实际要求的是必须包含沙盒式的搭建玩法。原版MC当中的搭建可以视作一个能力有限的AutoCAD，加上一个能力有限的C4D，加上一个能力有限的数字信号仿真。计算量可控的现实仿真软件我也再想不到更多了。</p>
+<p>除此之外，它还是一个多人网络游戏，并且还是一个存档游戏，所有游戏数据必须能表示为大小合理的游戏数据来持久化/网络传输。这就意味着它不能包含太多的拥有大量三角形的复杂精致模型，包括用户搭建出来的和随机生成出来的。</p>
+<p>就想到了这么多。也许一个切入点是从FF里把能抄的先抄过来，大概。</p></body></html></div><div class="pagination"><a class="left arrow" href="/ideas/default/1705231804">&#8592;</a><a class="top" href="#">Top</a></div></main><footer><span>Compiled at <time datetime="2024-01-19T06:00:19.143472700+00:00">2024-01-19 06:00:19.143472700 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>
