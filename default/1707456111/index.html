@@ -1,0 +1,20 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » 阶段性计划汇总</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2024-02-09T13:21:51+08:00">Fri, 9 Feb 2024 13:21:51 +0800</time></div><h1 class="post-title">阶段性计划汇总</h1><div class="post-line"></div><html><head></head><body><p>转眼来到了回家前的最后一天，还没有开始收拾（没什么好收拾的）行李，而是坐在床上敲着笔记本自带的键盘。并不是写东西的最优配置和时机。但还是感到了动笔的必要。</p>
+<p>尤其是在镜子里第一次看到自己有了皱纹。作为单眼皮也许这一天还来得相对晚了一些。</p>
+<p>那么我这一年来的所作所为值得这皱纹吗。更进一步的，我这十年来的成果通过这皱纹换来是值得的吗。</p>
+<p>我不知道。</p>
+<hr>
+<p>这一篇本质上来说是年初计划篇。只是由于我的高度无计划性，加上从一开年就立马投身于第一个ddl，所以到现在才觉得要写一写。</p>
+<p>首先从neatworks写起。我的phd生活可以分为交替出现的两种状态：对neatworks的架构有思路/没思路。现在它又一次来到了前者，并且取得了前所未有的进展。</p>
+<p>在成功组织完entropy实验实现的当下，对neatworks的展望分成两个部分。</p>
+<p>一个是修订现有框架。其一是给网络发消息的抽象<code>SendMessage</code>添加取消功能。随着各种发消息实现的编写我发现发网络消息的成本有时远超我预期；起码跟轻量级开销是不沾边了。与之相关的，在非正式文档里对应地更新对<code>SendMessage</code>的定义。如今它和<code>SendEvent</code>有着绝对意义上的本质区别了。其二是进一步探索利用TCP协议栈的最佳实践。在我的实现配置下有时会出现一百个应用共享操作系统的网络资源的情况，在p2p的通信场景下这有时会导致诸如端口号耗尽或是拒绝连接之类的极端情况。解决的思路多半就是限速限行，需要找到一个稳定性和性能的最优权衡。其三是对blob模块的接口重新设计，大体上就是既把它抽象成发网络消息从而根据第一条而获得取消功能，又和第二条一起保证对TCP网络资源的使用管控。具体的后面再想。</p>
+<p>另外一个是补充更多的实现，这就无穷无尽了。首当其冲的自然是Neo和它牵扯的一众BFT协议，而且最好能更有追求地把leader failure的相关path也写出来（可以不完全对但不能没有嘛）。然后是通信层，增加基于dpdk和io_uring的后端。再然后是应用层，增加对memcache和sqlite3的绑定。最后就来到了transaction相关。我也不知道这玩意怎么写，我也不知道这玩意写了有啥用。倒不如说上述的每一项都没有什么明确的用途。嘛，兴趣点和需求点的不匹配也是非常常见的了。</p>
+<p>哦差点没忘了，还有加入一个基础的model checking框架。我还有考虑过提供一个C++绑定之类的，不过相比之下我宁愿把整个代码库换种语言写一遍。</p>
+<p>顺便想到一个entropy的相关后续。wirehair的内存模型我算是自己摸索出来了，但是它会生成重复的symbol这件事我无法理解也无法接受。之后要去跟原作者提个issue问清楚，顺便确认下自己对内存模型的理解。理论上现在就可以做这事但我想整理一下复现代码先。</p>
+<p>回到neatworks。这个代码库当中现在有一些冗余。去除blob当中的如上面提到的早晚会拆除的临时装置，还有就是最核心的收消息抽象<code>OnEvent</code>分为有类型擦除和没有类型擦除两种变体。我暂且觉得两者都是必不可少的，或者说谁也不能彻底取代谁，所以考虑长此以往地平行维护它们——反正对两种变体进行实现的实例是可以共同工作的，应该不算是某种颜色危机。此外，有了类型擦除的版本以后，不类型擦除的<code>OnEvent</code>可以把事件类型改成关联类型，进一步彰显其独有特性。</p>
+<p>我从直觉上认为不类型擦除的版本会性能更好一点，所以接下来可以分别实现一个unreplicated做个基础测试。在dpdk下可以再做一次。</p>
+<p>关于neatworks的大概就这么多。嘛，当我先是在一个代码库里狂写大半个月，然后又一整个周完全不去动它（而且下个周多半也不怎么动），效果就是这样子的。</p>
+<p>当下里的下一个计划事项是量化入门。找来了一本书开始看，直觉上这是那种有足够的科普性质所以零基础可以看得懂，但是又太过于科普性质所以对于入行来说没太大帮助的类型。总之先看着吧，也没得选不是。</p>
+<p>量化属于我最理想（化）的出路之一，躺着赚钱，不占用过多时间，还具有一些兴趣点。唯一的问题就是我可能没有聪明到靠它吃饭的程度，并且现在才想起这码事对于我的人身轨迹来说已经有点太晚了。嘛，就当是给下辈子攒点经验吧。</p>
+<p>然后的一个事项是正在进行的科研项目。其实有两个：在p2p网络上的可靠因果排序，和在形式化验证的场景下构造一种通用的网络设备执行模型。我实在没有什么内容把它们拆成两段去写。只有两个互相有点矛盾的期待：希望前者能赶上sosp，并且希望后者能比前者更顺利——因为我对后者的兴趣要显著地更多。</p>
+<p>再然后一个事项就是写毕业论文了。我都不太有脸说这是一个计划。姑且的方案就是找老板问一句我是直接开始想怎么写就怎么写还是先找点什么东西参考下。如果老板回答前者就开始把现在想到的全都记下来然后丢给他，如果是后者就把他拉的阅读列表读完以后再如此做。虽然今天的前十一/十二分之一当中没有能够为毕业做任何事，但我还是保有希望在年底之前搞定tp的。希望如此。</p>
+<p>大概就这些吧。今天的限定计划还有给人买点咸蛋鱼皮，希望除夕的货架没有被人搬空得太快。</p></body></html></div><div class="pagination"><a class="left arrow" href="/ideas/default/1705638962">&#8592;</a><a class="top" href="#">Top</a></div></main><footer><span>Compiled at <time datetime="2024-02-09T06:15:49.858248052+00:00">2024-02-09 06:15:49.858248052 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>
