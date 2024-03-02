@@ -1,0 +1,18 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ideas » 1709363942</title><link rel="stylesheet" href="/ideas/assets/main.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Source+Code+Pro&amp;display=swap"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700"><link rel="icon" type="image/png" sizes="32x32" href="/ideas/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/ideas/assets/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/ideas/assets/apple-touch-icon.png"></head><body><nav class="nav"><div class="nav-container"><a href="/ideas"><h2 class="nav-title">ideas</h2></a><ul><li><a href="/ideas/default/page/0">Posts</a></li><li><a href="/ideas/tags"><del>Tags</del></a></li><li><a href="/ideas/about">About</a></li></ul></div></nav><main><div class="post"><div class="post-info"><time datetime="2024-03-02T15:19:02+08:00">Sat, 2 Mar 2024 15:19:02 +0800</time></div><div class="post-title"></div><div class="post-line"></div><html><head></head><body><p>又一个冬天即将结束在明天。一到冬天常常会有一些无功而返的大型编程创作尝试。然而这一次，史无前例的顺利让这个冬天前所未有的有了一丝波澜壮阔的感觉。</p>
+<p>今天是回家度假的最后一天。早上做完了基准协议<code>unreplicated</code>的性能测试。在测出了380K的异步吞吐，450K的阻塞吞吐以及610K的双线程阻塞吞吐以后，恍惚间我已经不知道接下来要写什么了。不是这个假期中的第一次，但是是最彻底的一次。</p>
+<p>我打开了上一篇日志，对照自己都做完了什么。</p>
+<p>我并没有给<code>SendMessage</code>添加取消功能，而是转而不再将有取消功能的<code>blob</code>模块的抽象基于<code>SendMessage</code>（并且按照原计划重写了它的实现）。果然发消息还是应该简简单单轻轻松松。</p>
+<p>我还没有彻底解决TCP栈不稳定的问题，但是为其做了充分的铺垫工作。我修订了TCP和<code>blob</code>的实现，解决了<code>blob</code>泄露端口号的问题，并优化了报错。我还写了初具雏形的TCP压力测试样例，虽然它目前还不能复现TCP栈的不稳定现象。后续想将<code>blob</code>负载引入压力测试中，使其负载模式更加接近entropy，我相信一定是能复现出来的。</p>
+<p>协议是一点都没写。如果我动手去写那现在总行数应该轻松破万了。我最终还是干了更有挑战性的项目。我摸索清楚了怎么给协议写单元测试（以及怎么做模型检查（姑且把model checking这么翻译吧，这玩意居然没有中文wiki页面），虽然给每个协议都做模型检查属于有点过于闲的了）。</p>
+<p>IO后端既没有写DPDK也没有写io_uring，但是写了基于标准库的阻塞后端，并且它的性能好得意外（虽然倒数一下其实只省了0.4微秒的开销，但是确实显得多啊）。DPDK多半是会写的，阻塞后端已经为它探好路了。</p>
+<p>应用层写了sqlite3的绑定，没有写memcached，但是手写了B树后端，算法层面应该是一样的。还额外实现了相当完整的YCSB负载生成。交易（transaction）相关倒是一点都没动。</p>
+<p>模型检查出乎意料地彻底写完了，完整的DSLabs搜索测试。性能上狂甩Java代码6-7倍，真是未曾预料地爽。在Python性能都直逼原生语言的今天，还能看到这种程度的遥遥领先，太出乎预料了。</p>
+<p>关于wairhair的两个坑也给原作者反应过了，效果情理之中地并不理想。不过这也不重要，这个假期就没打算动entropy就是了。</p>
+<p><code>blob</code>上的临时装置早就拆了干净。在类型擦除和不擦除两种变体之间的对应经过几次迭代以后达到了超预期的完美程度，并且把可能的设计空间搜索了个干净，今后都不用再担心写了大量事件驱动代码以后又发现了更好的抽象设计了。不擦除类型的变体改成关联类型倒是彻底忘记了，今晚一会可以试试，来不及就回去再搞吧。</p>
+<p>擦除不擦除的性能对比测试也做了，384K对374K，差距压在我想象区间的下限上。</p>
+<p>短短不到一个月里，我对neatworks的前景预期产生了峰回路转的变化。现在这个代码库成了我眼中的魔法库，不管对它许什么样的愿望都会满足我。模型检查和事件驱动设计迭代这两者中的任何一个都是史诗级别的，属于是那种我本来只是不抱希望的随便一想，然后就自顾自地生根发芽最后长成了我都不敢想的样子的经典案例。在此之前这种案例的结局常常是我半场开香槟然后发现是美梦一场，最后以全部推翻重写而告终。这次是最全须全尾的一集。还是两集连播。</p>
+<p>说实话，我做上篇中的规划的时候是以上半年到无确切期限的心态做的，然后在不到一个月的时间里就疯狂推平了，就挺突然的。</p>
+<p>而这导致的直接后果就是除此之外的一切都被抛之脑后了。课外书只看了一眼。两个进行中的科研项目碰都没碰。现在还多出了一个，或者说那个p2p网络内容分发的项目又回过头来找我了。毕业论文只是稍许地搞清楚了一点，并没有做任何实质性的工作，把这算成是有效工作量属于经典INTP行为，所以不干也罢。</p>
+<p>不过咸蛋鱼皮都已经抵达了当事人们的嘴里。</p>
+<p>我并不知道应该从这些纪实文学中得出什么道理，我此时一边看公演一边想着等下改关联类型代码的脑子也不能支撑我得出什么结论。</p>
+<p>把这个工作留给飞回那边的自己吧。</p></body></html></div><div class="pagination"><a class="left arrow" href="/ideas/default/1707456111">&#8592;</a><a class="top" href="#">Top</a></div></main><footer><span>Compiled at <time datetime="2024-03-02T12:02:14.349102961+00:00">2024-03-02 12:02:14.349102961 UTC</time>. Made with Rust using a Tale-inspired theme.</span></footer></body></html>
